@@ -1,21 +1,48 @@
 import sys
 
+
 def graph_import(link):
-    f= open(link,'r')
-    actual_line = f.readline()
-    graph = []
-    alpha = [0, 0]
-    while actual_line != "":
-        if len(list(map(int,actual_line.split()))) == 2 :
-            line_to_insert = list(map(int,actual_line.split())) + [0]
-            graph.append(line_to_insert)
-            actual_line = f.readline()
-        else:
-            graph.append(list(map(int,actual_line.split())))
-            actual_line = f.readline()
+    with open(link, 'r') as f:
+        lines = f.readlines()
 
-    graph.insert(0,alpha)
+    graph = []  # Liste pour stocker le graphe
+    parents = set()  # Stocke les nœuds qui sont des parents (prédécesseurs)
+    all_nodes = set()  # Stocke tous les nœuds existants
 
+    # Lire et structurer les données du fichier
+    for line in lines:
+        values = list(map(int, line.split()))
+        node = values[0]  # Numéro du nœud
+        duration = values[1]  # Durée de la tâche
+        predecessors = values[2:]  # Noeuds parents
+
+        graph.append([node, duration] + predecessors)  # Stocker la ligne
+        all_nodes.add(node)
+
+        # Ajouter les prédécesseurs à l'ensemble des parents
+        for p in predecessors:
+            parents.add(p)
+
+    # Déterminer les nœuds sans successeur (ceux qui ne sont jamais parents)
+    omega = [len(all_nodes) + 1, 0]  # Ω commence par [dernier_noeud + 1, 0]
+    for node in all_nodes:
+        if node not in parents:  # S'il n'est jamais parent, il va vers omega
+            omega.append(node)
+
+    # Déterminer les nœuds sans prédécesseur (ceux qui ne sont jamais enfants)
+    alpha = [0, 0]  # α est toujours [0, 0]
+    referenced_nodes = set(p for _, _, *ps in graph for p in ps)  # Tous les prédécesseurs cités
+    for node in all_nodes:
+        if node not in referenced_nodes:  # Si un nœud n'a pas de prédécesseur, c'est un départ
+            alpha.append(node)
+
+    # Insérer alpha au début du graphe
+    graph.insert(0, alpha)
+
+    # Ajouter omega à la fin du graphe
+    graph.append(omega)
+
+    print("Graphe final :")
     for line in graph:
         print(line)
 
