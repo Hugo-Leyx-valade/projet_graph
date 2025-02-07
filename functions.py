@@ -20,10 +20,10 @@ def graph_import(link):
         # Ajouter les prédécesseurs à l'ensemble des parents
         for p in predecessors:
             parents.add(p)
-
+        print(parents)
     # Déterminer les nœuds sans successeur (ceux qui ne sont jamais parents)
-    omega = [len(all_nodes) + 1, 0]  # initialisation d'oméga [dernier_noeud + 1, 0]
-    for i in range(len(graph)):
+    omega = [len(graph) + 1, 0]  # initialisation d'oméga [dernier_noeud + 1, 0]
+    for i in range(len(graph)+1):
         if i not in parents:  # S'il n'est jamais parent, il va vers omega
             omega.append(i)
 
@@ -34,6 +34,11 @@ def graph_import(link):
     graph.insert(0, alpha)
     # Ajouter omega à la fin du graphe
     graph.append(omega)
+
+    print("Graphe final :")
+    for line in graph:
+        print(line)
+
     return graph
 
 
@@ -50,11 +55,15 @@ def print_graph_to_matrix_of_values(liste_adjacence):
             matrice[int(liste_adjacence[i][j+2])][i] = str(liste_adjacence[i][j+2])  # Stocker en tant que chaîne pour l'affichage
 
     # Affichage de l'en-tête des colonnes
-    header = "  " + " ".join(str(i) for i in range(n))
+    header = "    " + "  ".join(str(i) for i in range(n))
+    col_width = max(len(str(n)), 2)  # Largeur minimale de 2
+    separator = "   " + "-" * (n * (col_width + 1))
+
     print(header)
+    print(separator)
 
     # Affichage des lignes
     for i in range(n):
-        row = f"{i} " + " ".join(matrice[i][j] if j < len(matrice[i]) else '*' for j in range(n))
+        row = f"{i} | " + "  ".join(matrice[i][j] if j < len(matrice[i]) else ' * ' for j in range(n))
         print(row)
 
