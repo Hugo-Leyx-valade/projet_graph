@@ -11,41 +11,29 @@ def graph_import(link):
 
     # Lire et structurer les données du fichier
     for line in lines:
-        values = list(map(int, line.split()))
-        node = values[0]  # Numéro du nœud
-        duration = values[1]  # Durée de la tâche
+        values = list(map(int, line.split()))  # fais un vecteur avec les valeurs de la ligne (1 1 => [1,1])
+        if len(values) < 3:
+            values.append(0)
         predecessors = values[2:]  # Noeuds parents
 
-        graph.append([node, duration] + predecessors)  # Stocker la ligne
-        all_nodes.add(node)
-
+        graph.append(values)  # Stocker la ligne
         # Ajouter les prédécesseurs à l'ensemble des parents
         for p in predecessors:
             parents.add(p)
 
     # Déterminer les nœuds sans successeur (ceux qui ne sont jamais parents)
-    omega = [len(all_nodes) + 1, 0]  # Ω commence par [dernier_noeud + 1, 0]
-    for node in all_nodes:
-        if node not in parents:  # S'il n'est jamais parent, il va vers omega
-            omega.append(node)
+    omega = [len(all_nodes) + 1, 0]  # initialisation d'oméga [dernier_noeud + 1, 0]
+    for i in range(len(graph)):
+        if i not in parents:  # S'il n'est jamais parent, il va vers omega
+            omega.append(i)
 
     # Déterminer les nœuds sans prédécesseur (ceux qui ne sont jamais enfants)
     alpha = [0, 0]  # α est toujours [0, 0]
-    referenced_nodes = set(p for _, _, *ps in graph for p in ps)  # Tous les prédécesseurs cités
-    for node in all_nodes:
-        if node not in referenced_nodes:  # Si un nœud n'a pas de prédécesseur, c'est un départ
-            alpha.append(node)
 
     # Insérer alpha au début du graphe
     graph.insert(0, alpha)
-
     # Ajouter omega à la fin du graphe
     graph.append(omega)
-
-    print("Graphe final :")
-    for line in graph:
-        print(line)
-
     return graph
 
 
