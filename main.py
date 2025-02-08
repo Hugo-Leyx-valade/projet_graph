@@ -17,9 +17,12 @@ def main():
         print_graph_to_matrix_of_values(graph)
         display_rank_of_each_node(compute_rank_of_node(graph))
     print("Date au plus tot:")
-    print(compute_earliest_date(graph)) #MARCHE PAS BIEN
+    earliest_date = compute_earliest_date(graph) #MARCHE PAS BIEN
+    draw_earliest_date_tab(earliest_date,"Calendrier le plus court")
     print("Date au plus tard:")
-    print(compute_latest_date(graph))  #MARCHE PAS
+    print(compute_latest_date(graph,earliest_date))  #MARCHE PAS
+    draw_earliest_date_tab(earliest_date,"Calendrier le plus court")
+
 
 
 

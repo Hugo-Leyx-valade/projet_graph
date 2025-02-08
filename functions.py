@@ -145,7 +145,7 @@ def display_rank_of_each_node(ranks):
         print(f"Rang du sommet {node}: {rank}")
 
 
-def dijkstra_longest_path(graph, start):
+def calculate_earliest_date(graph, start):
     """
     Implémente l'algorithme de Dijkstra modifié pour trouver le chemin le plus long.
     :param graph: Dictionnaire représentant le graphe d'ordonnancement {sommet: [(successeur, poids)]}
@@ -168,6 +168,42 @@ def dijkstra_longest_path(graph, start):
 
     return dist
 
+
+def invert_graph(graph):
+    """Inverse le graphe donné."""
+    inverted_graph = {node: [] for node in graph}
+    for node in graph:
+        for neighbor, weight in graph[node]:
+            if neighbor not in inverted_graph:
+                inverted_graph[neighbor] = []
+            inverted_graph[neighbor].append((node, weight))
+    return inverted_graph
+
+def calculate_latest_dates(graph, end, project_duration):
+    """
+    Calcule les dates au plus tard en utilisant un graphe inversé.
+    :param graph: Dictionnaire représentant le graphe d'ordonnancement {sommet: [(successeur, poids)]}
+    :param end: Sommet de fin (N+1 pour LS)
+    :param project_duration: Durée totale du projet
+    :return: Dictionnaire des dates au plus tard depuis la fin
+    """
+    inverted_graph = invert_graph(graph)
+    latest = {node: float('inf') for node in inverted_graph}
+    latest[end] = project_duration
+    heap = [(0, end)]  # Utilisation d'un tas pour minimiser la distance (inversion des poids)
+
+    while heap:
+        current_dist, node = heapq.heappop(heap)
+        current_dist = -current_dist  # Conversion en valeur positive
+
+        for neighbor, weight in inverted_graph[node]:
+            new_dist = current_dist - weight
+            if new_dist < latest[neighbor]:  # Minimisation de la distance
+                latest[neighbor] = new_dist
+                heapq.heappush(heap, (-new_dist, neighbor))
+
+    return latest
+
 def create_adjacency_list(graph):
     adjacent_list = {node[0]: [] for node in graph}
     task_duration = {node[0]: node[1] for node in graph}
@@ -179,15 +215,58 @@ def create_adjacency_list(graph):
 
 def compute_earliest_date(graph):  #MARCHE PAS BIEN
     adjacent_list = create_adjacency_list(graph)
-    earliest_date = dijkstra_longest_path(adjacent_list, 0)
+    earliest_date = calculate_earliest_date(adjacent_list, 0)
     return earliest_date
 
 
-def compute_latest_date(graph): #MARCHE PAS DU TOUT
-    adjacent_list = adjacent_list = create_adjacency_list(graph)
-    latest_date = dijkstra_longest_path(adjacent_list, len(graph))
+def compute_latest_date(graph,earliest_date_time): #MARCHE PAS DU TOUT
+    adjacent_list = create_adjacency_list(graph)
+    latest_date = calculate_latest_dates(adjacent_list, len(graph),earliest_date_time)
     return latest_date
 
+
+def draw_earliest_date_tab(dictionnaire, titre=""):
+    # Vérifier si le dictionnaire est vide
+    if not dictionnaire:
+        print("Le dictionnaire est vide.")
+        return
+
+    # Récupérer les clés du dictionnaire
+    cles = list(dictionnaire.keys())
+
+    # Calculer la largeur maximale des colonnes
+    largeurs = [max(len(str(cle)), len(str(dictionnaire[cle]))) for cle in cles]
+
+    # Calculer la largeur totale du tableau
+    largeur_totale = sum(largeurs) + 3 * (len(cles) - 1) + 2
+
+    # Afficher la bordure supérieure avec le titre centré
+    if titre:
+        titre_formate = f"| {titre} |"
+        espace_disponible = largeur_totale - len(titre_formate)
+        espace_gauche = espace_disponible // 2
+        espace_droite = espace_disponible - espace_gauche
+        print("+" + "-" * espace_gauche + titre_formate + "-" * espace_droite + "+")
+    else:
+        print("+" + "-" * (largeur_totale - 2) + "+")
+
+    # Afficher les clés en haut
+    for i, cle in enumerate(cles):
+        print("| " + str(cle).ljust(largeurs[i]), end=" ")
+    print("|")  # Nouvelle ligne
+
+    # Afficher une ligne de séparation
+    for largeur in largeurs:
+        print("+-" + "-" * largeur, end=" ")
+    print("+")  # Nouvelle ligne
+
+    # Afficher les valeurs
+    for i, cle in enumerate(cles):
+        print("| " + str(dictionnaire[cle]).ljust(largeurs[i]), end=" ")
+    print("|")  # Nouvelle ligne
+
+    # Afficher la bordure inférieure
+    print("+" + "-" * (largeur_totale) + "+")
 
 
 
