@@ -108,3 +108,90 @@ def print_graph_to_matrix_of_values(liste_adjacence):
         row = f"{i} | " + "  ".join(matrice[i][j] if j < len(matrice[i]) else ' * ' for j in range(n))
         print(row)
 
+
+
+
+
+def compute_rank_of_node(graph):
+
+    # Initialisation des rangs des sommets
+    ranks = {node[0]: 0 for node in graph}
+
+    # Création d'un dictionnaire des degrés entrants (nombre de prédecesseurs)
+    in_degree = {node[0]: 0 for node in graph}
+    for node in graph:
+        for pred in node[2:]:
+            in_degree[node[0]] += 1
+
+    # File des sommets sans prédécesseurs (rang 0)
+    queue = deque([node[0] for node in graph if in_degree[node[0]] == 0])
+
+    while queue:
+        node = queue.popleft()
+        current_rank = ranks[node]  # Récupération du rang du sommet actuel
+
+        for succ in graph:
+            if node in succ[2:]:  # Si le sommet est un prédécesseur de succ
+                in_degree[succ[0]] -= 1  # On enlève un prédécesseur
+                if in_degree[succ[0]] == 0:
+                    queue.append(succ[0])
+                ranks[succ[0]] = max(ranks[succ[0]], current_rank + 1)
+
+    return ranks
+
+
+def display_rank_of_each_node(ranks):
+    for node, rank in ranks.items():
+        print(f"Rang du sommet {node}: {rank}")
+
+
+def dijkstra_longest_path(graph, start):
+    """
+    Implémente l'algorithme de Dijkstra modifié pour trouver le chemin le plus long.
+    :param graph: Dictionnaire représentant le graphe d'ordonnancement {sommet: [(successeur, poids)]}
+    :param start: Sommet source (0 pour ES, N+1 pour LS)
+    :return: Dictionnaire des distances maximales depuis la source
+    """
+    dist = {node: float('-inf') for node in graph}
+    dist[start] = 0
+    heap = [(-0, start)]  # Utilisation d'un tas pour maximiser la distance (inversion des poids)
+
+    while heap:
+        current_dist, node = heapq.heappop(heap)
+        current_dist = -current_dist  # Conversion en valeur positive
+
+        for neighbor, weight in graph[node]:
+            new_dist = current_dist + weight
+            if new_dist > dist[neighbor]:  # Maximisation de la distance
+                dist[neighbor] = new_dist
+                heapq.heappush(heap, (-new_dist, neighbor))
+
+    return dist
+
+def create_adjacency_list(graph):
+    adjacent_list = {node[0]: [] for node in graph}
+    task_duration = {node[0]: node[1] for node in graph}
+    for node in graph:
+        for pred in node[2:]:
+            adjacent_list[pred].append((node[0], task_duration[pred]))
+    return adjacent_list
+
+
+def compute_earliest_date(graph):  #MARCHE PAS BIEN
+    adjacent_list = create_adjacency_list(graph)
+    earliest_date = dijkstra_longest_path(adjacent_list, 0)
+    return earliest_date
+
+
+def compute_latest_date(graph): #MARCHE PAS DU TOUT
+    adjacent_list = adjacent_list = create_adjacency_list(graph)
+    latest_date = dijkstra_longest_path(adjacent_list, len(graph))
+    return latest_date
+
+
+
+
+
+
+
+
