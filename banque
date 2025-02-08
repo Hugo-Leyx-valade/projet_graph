@@ -1,0 +1,2 @@
+        if len(values) < 3:
+            values.append(0)

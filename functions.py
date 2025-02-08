@@ -1,4 +1,35 @@
 import sys
+import copy
+from collections import deque
+import heapq
+
+
+
+def test_no_circuit_in_graph(graph):
+    print("debut test circuit")
+    graph_for_test = copy.deepcopy(graph)
+    node_in_graph = set()
+    for i in range(len(graph_for_test)):
+        node_in_graph.add(i+1)
+    for line in graph_for_test:
+        if len(line) < 3:
+            graph_for_test[graph_for_test.index(line)] = []
+            node_in_graph.discard(line[0])
+        else:
+            for p in line[2:]:
+                if p not in node_in_graph:
+                    line.pop(line.index(p))
+            if len(line) < 3:
+                graph_for_test[graph_for_test.index(line)] = []
+                node_in_graph.discard(line[0])
+    for i in range(len(graph_for_test)):
+        if graph_for_test[i] != []:
+            return -1
+        else :
+            return 1
+
+
+
 
 
 def graph_import(link):
@@ -7,25 +38,33 @@ def graph_import(link):
 
     graph = []  # Liste pour stocker le graphe
     parents = set()  # Stocke les nœuds qui sont des parents (prédécesseurs)
-    all_nodes = set()  # Stocke tous les nœuds existants
+    predecessors = set()  # Stocke tous les nœuds existants
 
     # Lire et structurer les données du fichier
     for line in lines:
         values = list(map(int, line.split()))  # fais un vecteur avec les valeurs de la ligne (1 1 => [1,1])
-        if len(values) < 3:
-            values.append(0)
-        predecessors = values[2:]  # Noeuds parents
+
+        if values[1] < 0 : # Test si la valeur de liens ne sont pas négatifs
+            return -1 # Doit etre pris en charge dans le main avec une comparaison
+
+        predecessors.update(values[2:])  # Noeuds parents
 
         graph.append(values)  # Stocker la ligne
         # Ajouter les prédécesseurs à l'ensemble des parents
-        for p in predecessors:
-            parents.add(p)
-        print(parents)
+
+    # implémenter la fonction de test circuit
+    if test_no_circuit_in_graph(graph) == -1 :
+        return -2
+
+    for line in graph:
+        if len(line) < 3:
+            line.append(0)
+
     # Déterminer les nœuds sans successeur (ceux qui ne sont jamais parents)
     omega = [len(graph) + 1, 0]  # initialisation d'oméga [dernier_noeud + 1, 0]
-    for i in range(len(graph)+1):
-        if i not in parents:  # S'il n'est jamais parent, il va vers omega
-            omega.append(i)
+    for i in range(len(graph)):
+        if i+1 not in predecessors:  # S'il n'est jamais parent, il va vers omega
+            omega.append(i+1)
 
     # Déterminer les nœuds sans prédécesseur (ceux qui ne sont jamais enfants)
     alpha = [0, 0]  # α est toujours [0, 0]
@@ -40,6 +79,8 @@ def graph_import(link):
         print(line)
 
     return graph
+
+
 
 
 def print_graph_to_matrix_of_values(liste_adjacence):
