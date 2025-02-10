@@ -109,9 +109,6 @@ def print_graph_to_matrix_of_values(liste_adjacence):
         print(row)
 
 
-
-
-
 def compute_rank_of_node(graph):
 
     # Initialisation des rangs des sommets
@@ -144,6 +141,25 @@ def display_rank_of_each_node(ranks):
     for node, rank in ranks.items():
         print(f"Rang du sommet {node}: {rank}")
 
+def invert_graph(graph):
+    """Inverse le graphe donné."""
+    inverted_graph = {node: [] for node in graph}
+    for node in graph:
+        for neighbor, weight in graph[node]:
+            if neighbor not in inverted_graph:
+                inverted_graph[neighbor] = []
+            inverted_graph[neighbor].append((node, weight))
+    return inverted_graph
+
+
+def create_adjacency_list(graph):
+    adjacent_list = {node[0]: [] for node in graph}
+    task_duration = {node[0]: node[1] for node in graph}
+    for node in graph:
+        for pred in node[2:]:
+            adjacent_list[pred].append((node[0], task_duration[pred]))
+    return adjacent_list
+
 
 def calculate_earliest_date(graph, start):
     """
@@ -169,63 +185,14 @@ def calculate_earliest_date(graph, start):
     return dist
 
 
-def invert_graph(graph):
-    """Inverse le graphe donné."""
-    inverted_graph = {node: [] for node in graph}
-    for node in graph:
-        for neighbor, weight in graph[node]:
-            if neighbor not in inverted_graph:
-                inverted_graph[neighbor] = []
-            inverted_graph[neighbor].append((node, weight))
-    return inverted_graph
-
-def calculate_latest_dates(graph, end, project_duration):
-    """
-    Calcule les dates au plus tard en utilisant un graphe inversé.
-    :param graph: Dictionnaire représentant le graphe d'ordonnancement {sommet: [(successeur, poids)]}
-    :param end: Sommet de fin (N+1 pour LS)
-    :param project_duration: Durée totale du projet
-    :return: Dictionnaire des dates au plus tard depuis la fin
-    """
-    inverted_graph = invert_graph(graph)
-    latest = {node: float('inf') for node in inverted_graph}
-    latest[end] = project_duration
-    heap = [(0, end)]  # Utilisation d'un tas pour minimiser la distance (inversion des poids)
-
-    while heap:
-        current_dist, node = heapq.heappop(heap)
-        current_dist = -current_dist  # Conversion en valeur positive
-
-        for neighbor, weight in inverted_graph[node]:
-            new_dist = current_dist - weight
-            if new_dist < latest[neighbor]:  # Minimisation de la distance
-                latest[neighbor] = new_dist
-                heapq.heappush(heap, (-new_dist, neighbor))
-
-    return latest
-
-def create_adjacency_list(graph):
-    adjacent_list = {node[0]: [] for node in graph}
-    task_duration = {node[0]: node[1] for node in graph}
-    for node in graph:
-        for pred in node[2:]:
-            adjacent_list[pred].append((node[0], task_duration[pred]))
-    return adjacent_list
-
-
-def compute_earliest_date(graph):  #MARCHE PAS BIEN
+def compute_earliest_date(graph):
     adjacent_list = create_adjacency_list(graph)
     earliest_date = calculate_earliest_date(adjacent_list, 0)
     return earliest_date
 
 
-def compute_latest_date(graph,earliest_date_time): #MARCHE PAS DU TOUT
-    adjacent_list = create_adjacency_list(graph)
-    latest_date = calculate_latest_dates(adjacent_list, len(graph),earliest_date_time)
-    return latest_date
 
-
-def draw_earliest_date_tab(dictionnaire, titre=""):
+def draw_dict(dictionnaire, titre=""):
     # Vérifier si le dictionnaire est vide
     if not dictionnaire:
         print("Le dictionnaire est vide.")
@@ -268,9 +235,86 @@ def draw_earliest_date_tab(dictionnaire, titre=""):
     # Afficher la bordure inférieure
     print("+" + "-" * (largeur_totale) + "+")
 
+def create_reversed_adjacency_list(graph):
+    """
+    Crée une liste d'adjacence inversée (successeurs -> prédécesseurs) avec les poids (durées des tâches).
+    :param graph: Liste de tâches [[numéro, durée, prédécesseurs], ...]
+    :return: Dictionnaire {sommet: [(prédécesseur, poids)]}
+    """
+    reversed_list = {node[0]: [] for node in graph}
+    task_duration = {node[0]: node[1] for node in graph}
+
+    for node in graph:
+        for pred in node[2:]:
+            reversed_list[node[0]].append((pred, task_duration[pred]))  # (prédécesseur, durée)
+
+    return reversed_list
 
 
+def calculate_latest_dates(graph, end_node):
+    """
+    Implémente Dijkstra inversé pour calculer la date au plus tard (LS - Latest Start).
+    :param graph: Dictionnaire représentant le graphe inversé {sommet: [(prédécesseur, poids)]}
+    :param end_node: Dernier nœud du graphe (Ω)
+    :return: Dictionnaire des dates au plus tard (LS)
+    """
+    dist = {node: float('-inf') for node in graph}
+    dist[end_node] = 0  # On commence à la fin
+
+    heap = [(-0, end_node)]  # Inversion des poids pour maximiser
+
+    while heap:
+        current_dist, node = heapq.heappop(heap)
+        current_dist = -current_dist  # Conversion en valeur positive
+
+        for predecessor, weight in graph[node]:
+            new_dist = current_dist + weight
+            if new_dist > dist[predecessor]:  # Maximisation de la distance inverse
+                dist[predecessor] = new_dist
+                heapq.heappush(heap, (-new_dist, predecessor))
+
+    return dist
 
 
+def compute_latest_date(graph, project_duration):
+    """
+    Calcule la date au plus tard (LS) en ajustant les valeurs obtenues avec Dijkstra inversé.
+    :param graph: Liste d'adjacence
+    :param project_duration: Durée totale du projet (max(ES))
+    :return: Dictionnaire contenant LS pour chaque sommet
+    """
+    reversed_graph = create_reversed_adjacency_list(graph)
+    latest_dates = calculate_latest_dates(reversed_graph, max(reversed_graph.keys()))  # Ω (dernier sommet)
 
+    # Ajustement de LS pour respecter la contrainte de fin du projet
+    for node in latest_dates:
+        latest_dates[node] = project_duration - latest_dates[node]
+
+    return latest_dates
+
+
+def calculate_margins(earliest, latest):
+    margins = {node: latest[node] - earliest[node] for node in earliest}
+    return margins
+
+
+def find_critical_path(margins):
+    list = []
+    for node in margins:
+        if margins[node] == 0:
+            list.append(node)
+    return list
+
+def print_critical_path(tab):
+    # Vérifie si la liste n'est pas vide
+    if not tab:
+        print("Le chemin critique est vide")
+        return
+    print("Le chemin critique:")
+    # Itère sur les éléments de la liste et les affiche
+    for i in range(len(tab) - 1):
+        print(f"{tab[i]} => ", end="")
+
+    # Affiche le dernier élément sans "=>"
+    print(tab[-1])
 
