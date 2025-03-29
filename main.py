@@ -1,12 +1,9 @@
-# Python program to demonstrate
-# main() function
 from functions import *
 
 print("Hello")
 
-# Defining main function
 def main():
-    graph = graph_import("graphes.txt")
+    graph = graph_import("graphes.txt") #Ajouter table*.txt
     if graph == -1:
         print("il y a au moins un arc à valeur négative !")
         return
@@ -31,8 +28,6 @@ def main():
     print_critical_path(path)
 
 
-# Using the special variable
-# __name__
 if __name__=="__main__":
     main()
 
