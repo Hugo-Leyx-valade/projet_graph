@@ -3,7 +3,7 @@ from functions import *
 print("Hello")
 
 def main():
-    graph = graph_import("graphe2.txt") #Ajouter table*.txt
+    graph = graph_import("table 14.txt") #Ajouter table*.txt
     if graph == -1:
         print("il y a au moins un arc à valeur négative !")
         return
