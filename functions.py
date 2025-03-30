@@ -41,7 +41,7 @@ def graph_import(link):
     for line in lines:
         values = list(map(int, line.split()))  # fais un vecteur avec les valeurs de la ligne (1 1 => [1,1])
 
-        if values[1] < 0 : # Test si la valeur de liens ne sont pas négatifs
+        if values[1] < 0 : # Test si la valeur de liens ne sont pas négatif
             return -1 # Doit etre pris en charge dans le main avec une comparaison
 
         predecessors.update(values[2:])  # Noeuds parents
