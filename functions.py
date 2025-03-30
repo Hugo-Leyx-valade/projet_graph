@@ -2,11 +2,11 @@ import sys
 import copy
 from collections import deque
 import heapq
-
+from copy import deepcopy
 
 
 def test_no_circuit_in_graph(graph):
-    print("debut test circuit")
+    print("Début test circuit")
     graph_for_test = copy.deepcopy(graph)
     node_in_graph = set()
     for i in range(len(graph_for_test)):
@@ -16,21 +16,18 @@ def test_no_circuit_in_graph(graph):
             graph_for_test[graph_for_test.index(line)] = []
             node_in_graph.discard(line[0])
         else:
+            line_test = deepcopy(line)
             for p in line[2:]:
                 if p not in node_in_graph:
-                    line.pop(line.index(p))
-            if len(line) < 3:
-                graph_for_test[graph_for_test.index(line)] = []
+                    line_test.pop(line_test.index(p))
+            if len(line_test) < 3:
+                graph_for_test[graph_for_test.index(line)] = None
                 node_in_graph.discard(line[0])
     for i in range(len(graph_for_test)):
-        if graph_for_test[i] != []:
+        if graph_for_test[i] != None:
             return -1
         else :
             return 1
-
-
-
-
 
 def graph_import(link):
     with open(link, 'r') as f:
@@ -44,7 +41,7 @@ def graph_import(link):
     for line in lines:
         values = list(map(int, line.split()))  # fais un vecteur avec les valeurs de la ligne (1 1 => [1,1])
 
-        if values[1] < 0 : # Test si la valeur de liens ne sont pas négatifs
+        if values[1] < 0 : # Test si la valeur de liens ne sont pas négatif
             return -1 # Doit etre pris en charge dans le main avec une comparaison
 
         predecessors.update(values[2:])  # Noeuds parents
@@ -52,7 +49,7 @@ def graph_import(link):
         graph.append(values)  # Stocker la ligne
         # Ajouter les prédécesseurs à l'ensemble des parents
 
-    # implémenter la fonction de test circuit
+    # Implémenter la fonction de test circuit
     if test_no_circuit_in_graph(graph) == -1 :
         return -2
 
@@ -80,16 +77,13 @@ def graph_import(link):
 
     return graph
 
-
-
-
 def print_graph_to_matrix_of_values(liste_adjacence):
     # Déterminer la taille de la matrice
     n = len(liste_adjacence)
 
     # Créer une matrice remplie de '*'
     matrice = [['*' for _ in range(n)] for _ in range(n)]
-    print("taille de la matrice d'adjacsence : " + str(n))
+    print("Taille de la matrice d'adjacence : " + str(n))
     # Remplir la matrice avec les valeurs données
     for i in range(n):
         for j in range(len(liste_adjacence[i])-2):
@@ -108,9 +102,7 @@ def print_graph_to_matrix_of_values(liste_adjacence):
         row = f"{i} | " + "  ".join(matrice[i][j] if j < len(matrice[i]) else ' * ' for j in range(n))
         print(row)
 
-
 def compute_rank_of_node(graph):
-
     # Initialisation des rangs des sommets
     ranks = {node[0]: 0 for node in graph}
 
@@ -136,21 +128,9 @@ def compute_rank_of_node(graph):
 
     return ranks
 
-
 def display_rank_of_each_node(ranks):
     for node, rank in ranks.items():
         print(f"Rang du sommet {node}: {rank}")
-
-def invert_graph(graph):
-    """Inverse le graphe donné."""
-    inverted_graph = {node: [] for node in graph}
-    for node in graph:
-        for neighbor, weight in graph[node]:
-            if neighbor not in inverted_graph:
-                inverted_graph[neighbor] = []
-            inverted_graph[neighbor].append((node, weight))
-    return inverted_graph
-
 
 def create_adjacency_list(graph):
     adjacent_list = {node[0]: [] for node in graph}
@@ -160,7 +140,6 @@ def create_adjacency_list(graph):
             adjacent_list[pred].append((node[0], task_duration[pred]))
     return adjacent_list
 
-
 def calculate_earliest_date(graph, start):
     """
     Implémente l'algorithme de Dijkstra modifié pour trouver le chemin le plus long.
@@ -168,29 +147,29 @@ def calculate_earliest_date(graph, start):
     :param start: Sommet source (0 pour ES, N+1 pour LS)
     :return: Dictionnaire des distances maximales depuis la source
     """
+    # Initialize distances to negative infinity
     dist = {node: float('-inf') for node in graph}
     dist[start] = 0
-    heap = [(-0, start)]  # Utilisation d'un tas pour maximiser la distance (inversion des poids)
 
-    while heap:
-        current_dist, node = heapq.heappop(heap)
-        current_dist = -current_dist  # Conversion en valeur positive
+    # Priority queue for the longest path
+    priority_queue = [(-0, start)]
+
+    while priority_queue:
+        current_dist, node = heapq.heappop(priority_queue)
+        current_dist = -current_dist  # Convert to positive value
 
         for neighbor, weight in graph[node]:
             new_dist = current_dist + weight
-            if new_dist > dist[neighbor]:  # Maximisation de la distance
+            if new_dist > dist[neighbor]:  # Maximize the distance
                 dist[neighbor] = new_dist
-                heapq.heappush(heap, (-new_dist, neighbor))
+                heapq.heappush(priority_queue, (-new_dist, neighbor))
 
     return dist
-
 
 def compute_earliest_date(graph):
     adjacent_list = create_adjacency_list(graph)
     earliest_date = calculate_earliest_date(adjacent_list, 0)
     return earliest_date
-
-
 
 def draw_dict(dictionnaire, titre=""):
     # Vérifier si le dictionnaire est vide
@@ -250,7 +229,6 @@ def create_reversed_adjacency_list(graph):
 
     return reversed_list
 
-
 def calculate_latest_dates(graph, end_node):
     """
     Implémente Dijkstra inversé pour calculer la date au plus tard (LS - Latest Start).
@@ -275,7 +253,6 @@ def calculate_latest_dates(graph, end_node):
 
     return dist
 
-
 def compute_latest_date(graph, project_duration):
     """
     Calcule la date au plus tard (LS) en ajustant les valeurs obtenues avec Dijkstra inversé.
@@ -292,11 +269,9 @@ def compute_latest_date(graph, project_duration):
 
     return latest_dates
 
-
 def calculate_margins(earliest, latest):
     margins = {node: latest[node] - earliest[node] for node in earliest}
     return margins
-
 
 def find_critical_path(margins):
     list = []
@@ -317,4 +292,3 @@ def print_critical_path(tab):
 
     # Affiche le dernier élément sans "=>"
     print(tab[-1])
-
