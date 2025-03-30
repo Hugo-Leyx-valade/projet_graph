@@ -1,0 +1,4 @@
+Début test circuit
+Le graphe comporte un circuit !
+
+Process finished with exit code 0
