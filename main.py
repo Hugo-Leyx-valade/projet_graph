@@ -1,6 +1,8 @@
 from functions import *
+
+
 def main():
-    graph = graph_import("table 5.txt")  # Ajouter table*.txt
+    graph = graph_import("table 1.txt")  # Ajouter table*.txt
     if graph == -1:
         print("Il y a au moins un arc à valeur négative !")
         return
@@ -27,6 +29,3 @@ def main():
 
 if __name__ == "__main__":
     main()
-
-
-
