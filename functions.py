@@ -8,26 +8,38 @@ from copy import deepcopy
 def test_no_circuit_in_graph(graph):
     print("Début test circuit")
     graph_for_test = copy.deepcopy(graph)
-    node_in_graph = set()
-    for i in range(len(graph_for_test)):
-        node_in_graph.add(i+1)
+    node_in_graph = set(range(1, len(graph_for_test) + 1))
+
+    # Function to remove a node and its connections
+    def remove_node(node_id):
+        graph_for_test[node_id - 1] = None
+        node_in_graph.discard(node_id)
+        for line in graph_for_test:
+            if line is not None:
+                # Remove the node from the successors list
+                if node_id in line[2:]:
+                    line.remove(node_id)
+                # If the node was the only successor, remove the line
+                if len(line) < 3:
+                    remove_node(line[0])
+
     for line in graph_for_test:
-        if len(line) < 3:
-            graph_for_test[graph_for_test.index(line)] = []
-            node_in_graph.discard(line[0])
-        else:
-            line_test = deepcopy(line)
-            for p in line[2:]:
-                if p not in node_in_graph:
-                    line_test.pop(line_test.index(p))
-            if len(line_test) < 3:
-                graph_for_test[graph_for_test.index(line)] = None
-                node_in_graph.discard(line[0])
-    for i in range(len(graph_for_test)):
-        if graph_for_test[i] != None:
+        if line is not None:
+            if len(line) < 3:
+                remove_node(line[0])
+            else:
+                line_test = copy.deepcopy(line)
+                for p in line[2:]:
+                    if p not in node_in_graph:
+                        line_test.remove(p)
+                if len(line_test) < 3:
+                    remove_node(line[0])
+
+    for line in graph_for_test:
+        if line is not None:
             return -1
-        else :
-            return 1
+    return 1
+
 
 def graph_import(link):
     with open(link, 'r') as f:
@@ -41,7 +53,7 @@ def graph_import(link):
     for line in lines:
         values = list(map(int, line.split()))  # fais un vecteur avec les valeurs de la ligne (1 1 => [1,1])
 
-        if values[1] < 0 : # Test si la valeur de liens ne sont pas négatif
+        if values[1] < 0 : # Test si la valeur de liens ne sont pas négatifs
             return -1 # Doit etre pris en charge dans le main avec une comparaison
 
         predecessors.update(values[2:])  # Noeuds parents
